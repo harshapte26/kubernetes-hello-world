@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-app
+spec:
+  replicas: 3  # Adjust the number of replicas as needed
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: todo-app
+  template:
+    metadata:
+      labels:
+        app: todo-app
+    spec:
+      containers:
+      - name: flask-container
+        image: hsapte99/todo_app-flask-app:v2  # Replace with your actual Flask Docker image
+        ports:
+        - containerPort: 8888  # Expose the port your Flask app is running on
+        env:
+        - name: MONGO_HOST
+          value: "mongodb-service"  # Update with your MongoDB connection details
+        - name: MONGO_PORT
+          value: "27017"
+        - name: PORT
+          value: "8888"
+        - name: FLASK_HOST
+          value: "0.0.0.0"
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 8888
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        timeoutSeconds: 2
+        failureThreshold: 3
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8888
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        timeoutSeconds: 2
+        failureThreshold: 3
